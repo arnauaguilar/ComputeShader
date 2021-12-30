@@ -36,7 +36,7 @@ class COMPUTESHADERRUNNER_API ForceField
 {
 public:
 	ForceField();
-	~ForceField();
+
 	
 	void BeginRendering();
 	void EndRendering();

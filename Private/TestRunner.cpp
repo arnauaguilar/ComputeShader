@@ -34,8 +34,9 @@ void ATestRunner::Tick(float DeltaTime)
 }
 void ATestRunner::BeginDestroy()
 {
-	field.EndRendering();
 	Super::BeginDestroy();
+	field.EndRendering();
+
 
 }
 

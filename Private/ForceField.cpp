@@ -50,10 +50,6 @@ ForceField::ForceField()
 {
 }
 
-ForceField::~ForceField()
-{
-}
-
 
 void ForceField::BeginRendering()
 {
@@ -79,7 +75,6 @@ void ForceField::EndRendering()
 	{
 		return;
 	}
-
 	//Get the Renderer Module and remove our entry from the ResolvedSceneColorCallbacks
 	const FName RendererModuleName("Renderer");
 	IRendererModule* RendererModule = FModuleManager::GetModulePtr<IRendererModule>(RendererModuleName);
@@ -89,6 +84,7 @@ void ForceField::EndRendering()
 	}
 
 	OnPostResolvedSceneColorHandle.Reset();
+	
 }
 
 void ForceField::UpdateParameters(FForceFieldCSParameters& DrawParameters)
@@ -118,14 +114,17 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Not Valid"));
 		FPooledRenderTargetDesc ComputeShaderOutputDesc(FPooledRenderTargetDesc::Create2DDesc(cachedParams.GetRenderTargetSize(), cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI->GetFormat(), FClearValueBinding::None, TexCreate_None, TexCreate_ShaderResource | TexCreate_UAV, false));
-		ComputeShaderOutputDesc.DebugName = TEXT("ForceFieldCS_Output_RenderTarget");
-		GRenderTargetPool.FindFreeElement(RHICmdList, ComputeShaderOutputDesc, ComputeShaderOutput, TEXT("ForceFieldCS_Output_RenderTarget"));
+		ComputeShaderOutputDesc.DebugName = TEXT("ForceFieldCS_Output_RenderTarget1");
+		GRenderTargetPool.FindFreeElement(RHICmdList, ComputeShaderOutputDesc, ComputeShaderOutput, TEXT("ForceFieldCS_Output_RenderTarget2"));
+		
 	}
 
 	//Specify the resource transition, we're executing this in post scene rendering so we set it to Graphics to Compute
-	//ERHIAccess transitionType = ERHIAccess::UAVMask;
+	ERHIAccess transitionType = ERHIAccess::SRVMask;
+	
 	//RHICmdList.TransitionResource(EResourceTransitionAccess::ERWBarrier, EResourceTransitionPipeline::EGfxToCompute, ComputeShaderOutput->GetRenderTargetItem().UAV);
-
+    RHICmdList.TransitionResource(transitionType, cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI);
+	
 	FForceFieldCS::FParameters PassParameters;
 	PassParameters.OutputTexture = ComputeShaderOutput->GetRenderTargetItem().UAV;
 	PassParameters.Dimensions = FVector2D(cachedParams.GetRenderTargetSize().X, cachedParams.GetRenderTargetSize().Y);
@@ -142,10 +141,10 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 
 	//Copy shader's output to the render target provided by the client
 	RHICmdList.CopyTexture(ComputeShaderOutput->GetRenderTargetItem().ShaderResourceTexture, cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI, FRHICopyTextureInfo());
-
-
+	
 	//Unbind the previously bound render targets
-	//RHICmdList.EndRenderPass();
+	
+	GRenderTargetPool.FreeUnusedResource(ComputeShaderOutput);
 
 	
 }
