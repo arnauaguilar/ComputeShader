@@ -112,7 +112,7 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 	//If the render target is not valid, get an element from the render target pool by supplying a Descriptor
 	if (!ComputeShaderOutput.IsValid())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Not Valid"));
+		UE_LOG(LogTemp, Warning, TEXT("Compute Shader Output Not Valid; re-generating"));
 		FPooledRenderTargetDesc ComputeShaderOutputDesc(FPooledRenderTargetDesc::Create2DDesc(cachedParams.GetRenderTargetSize(), cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI->GetFormat(), FClearValueBinding::None, TexCreate_None, TexCreate_ShaderResource | TexCreate_UAV, false));
 		ComputeShaderOutputDesc.DebugName = TEXT("ForceFieldCS_Output_RenderTarget1");
 		GRenderTargetPool.FindFreeElement(RHICmdList, ComputeShaderOutputDesc, ComputeShaderOutput, TEXT("ForceFieldCS_Output_RenderTarget2"));

@@ -17,19 +17,30 @@ void ATestRunner::BeginPlay()
 {
 	Super::BeginPlay();
 	field = ForceField();
-	field.BeginRendering();
+	Initialized = false;
 	
 }
 
 // Called every frame
 void ATestRunner::Tick(float DeltaTime)
 {
+	TranscurredTime+=DeltaTime;
 	Super::Tick(DeltaTime);
 
-	FForceFieldCSParameters parameters(RenderTarget);
-	TimeStamp++;
-	parameters.TimeStamp = TimeStamp;
-	field.UpdateParameters(parameters);
+	if(TranscurredTime>1.0f)
+	{
+		if(!Initialized)
+		{
+			field.BeginRendering();
+			Initialized = true;
+		}
+			
+		FForceFieldCSParameters parameters(RenderTarget);
+		TimeStamp++;
+		parameters.TimeStamp = TimeStamp;
+		field.UpdateParameters(parameters);
+	}
+
 
 }
 void ATestRunner::BeginDestroy()
