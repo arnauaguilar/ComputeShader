@@ -13,7 +13,7 @@
 
 
 
-#define NUM_THREADS_PER_GROUP_DIMENSION 32
+#define NUM_THREADS_PER_GROUP_DIMENSION 10
 
 class FForceFieldCS : public FGlobalShader
 {
@@ -21,7 +21,8 @@ class FForceFieldCS : public FGlobalShader
 	SHADER_USE_PARAMETER_STRUCT(FForceFieldCS, FGlobalShader)
 	
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters,)
-		SHADER_PARAMETER_UAV(RWTexture2D<float>, OutputTexture)
+		SHADER_PARAMETER_UAV(RWTexture3D<float4>, OutputTexture)
+		//SHADER_PARAMETER_UAV(RWTexture3D<FVector>, OutputTexture3D)
 		SHADER_PARAMETER(FVector2D, Dimensions)
 		SHADER_PARAMETER(UINT, TimeStamp)
 	END_SHADER_PARAMETER_STRUCT()
@@ -38,7 +39,7 @@ class FForceFieldCS : public FGlobalShader
 		//We're using it here to add some preprocessor defines. That way we don't have to change both C++ and HLSL code when we change the value for NUM_THREADS_PER_GROUP_DIMENSION
 		OutEnvironment.SetDefine(TEXT("THREADGROUPSIZE_X"), NUM_THREADS_PER_GROUP_DIMENSION);
 		OutEnvironment.SetDefine(TEXT("THREADGROUPSIZE_Y"), NUM_THREADS_PER_GROUP_DIMENSION);
-		OutEnvironment.SetDefine(TEXT("THREADGROUPSIZE_Z"), 1);
+		OutEnvironment.SetDefine(TEXT("THREADGROUPSIZE_Z"), NUM_THREADS_PER_GROUP_DIMENSION);
 	}
 };
 IMPLEMENT_GLOBAL_SHADER(FForceFieldCS, "/CustomShaders/ForceFieldCS.usf"/*"/Engine/Private/ComputeGenerateMips.usf"*/, "MainCS", SF_Compute);
@@ -113,7 +114,9 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 	if (!ComputeShaderOutput.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Compute Shader Output Not Valid; re-generating"));
-		FPooledRenderTargetDesc ComputeShaderOutputDesc(FPooledRenderTargetDesc::Create2DDesc(cachedParams.GetRenderTargetSize(), cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI->GetFormat(), FClearValueBinding::None, TexCreate_None, TexCreate_ShaderResource | TexCreate_UAV, false));
+		FIntVector Size = cachedParams.GetRenderTargetSize();
+		FPooledRenderTargetDesc ComputeShaderOutputDesc(FPooledRenderTargetDesc::CreateVolumeDesc(Size.X,Size.Y,Size.Z,cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI->GetFormat(), FClearValueBinding::None, TexCreate_None, TexCreate_ShaderResource | TexCreate_UAV, false));
+		//FPooledRenderTargetDesc ComputeShaderOutputDesc(FPooledRenderTargetDesc::Create2DDesc(cachedParams.GetRenderTargetSize(), cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI->GetFormat(), FClearValueBinding::None, TexCreate_None, TexCreate_ShaderResource | TexCreate_UAV, false));
 		ComputeShaderOutputDesc.DebugName = TEXT("ForceFieldCS_Output_RenderTarget1");
 		GRenderTargetPool.FindFreeElement(RHICmdList, ComputeShaderOutputDesc, ComputeShaderOutput, TEXT("ForceFieldCS_Output_RenderTarget2"));
 		
@@ -137,7 +140,7 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 	FComputeShaderUtils::Dispatch(RHICmdList, forceFieldCS, PassParameters,
 		FIntVector(FMath::DivideAndRoundUp(cachedParams.GetRenderTargetSize().X, NUM_THREADS_PER_GROUP_DIMENSION),
 							FMath::DivideAndRoundUp(cachedParams.GetRenderTargetSize().Y, NUM_THREADS_PER_GROUP_DIMENSION),
-							1));
+							FMath::DivideAndRoundUp(cachedParams.GetRenderTargetSize().Z, NUM_THREADS_PER_GROUP_DIMENSION)));
 
 	//Copy shader's output to the render target provided by the client
 	RHICmdList.CopyTexture(ComputeShaderOutput->GetRenderTargetItem().ShaderResourceTexture, cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI, FRHICopyTextureInfo());

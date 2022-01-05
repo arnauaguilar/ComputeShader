@@ -18,7 +18,7 @@ public:
 	ATestRunner();
 	ForceField field;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ShaderDemo)
-	class UTextureRenderTarget2D* RenderTarget;
+	class UTextureRenderTargetVolume* RenderTarget;
 	
 protected:
 	// Called when the game starts or when spawned

@@ -5,27 +5,28 @@
 #include "CoreMinimal.h"
 
 #include "RenderGraphUtils.h"
+#include "Engine/TextureRenderTargetVolume.h"
 #include "Runtime/Engine/Classes/Engine/TextureRenderTarget2D.h"
 
 struct  FForceFieldCSParameters
 {
-	UTextureRenderTarget2D* RenderTarget;
+	UTextureRenderTargetVolume* RenderTarget;
 
 
-	FIntPoint GetRenderTargetSize() const
+	FIntVector GetRenderTargetSize() const
 	{
 		return CachedRenderTargetSize;
 	}
 
 	FForceFieldCSParameters() { }
-	FForceFieldCSParameters(UTextureRenderTarget2D* IORenderTarget)
+	FForceFieldCSParameters(UTextureRenderTargetVolume* IORenderTarget)
 		: RenderTarget(IORenderTarget)
 	{
-		CachedRenderTargetSize = RenderTarget ? FIntPoint(RenderTarget->SizeX, RenderTarget->SizeY) : FIntPoint::ZeroValue;
+		CachedRenderTargetSize = RenderTarget ? FIntVector(RenderTarget->SizeX, RenderTarget->SizeY,RenderTarget->SizeZ) : FIntVector::ZeroValue;
 	}
 
 private:
-	FIntPoint CachedRenderTargetSize;
+	FIntVector CachedRenderTargetSize;
 public:
 	uint32 TimeStamp;
 };
