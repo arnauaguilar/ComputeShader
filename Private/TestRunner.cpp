@@ -37,7 +37,8 @@ void ATestRunner::Tick(float DeltaTime)
 			
 		FForceFieldCSParameters parameters(RenderTarget);
 		TimeStamp++;
-		parameters.TimeStamp = TimeStamp;
+		parameters.TargetPos = object->GetActorLocation();
+		parameters.UnitsPerPixel = 100;
 		field.UpdateParameters(parameters);
 	}
 

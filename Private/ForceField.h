@@ -28,7 +28,8 @@ struct  FForceFieldCSParameters
 private:
 	FIntVector CachedRenderTargetSize;
 public:
-	uint32 TimeStamp;
+	FVector TargetPos;
+	uint32 UnitsPerPixel;
 };
 /**
  * 

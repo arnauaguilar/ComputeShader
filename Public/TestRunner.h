@@ -19,6 +19,8 @@ public:
 	ForceField field;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ShaderDemo)
 	class UTextureRenderTargetVolume* RenderTarget;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ShaderDemo)
+	class AActor* object;
 	
 protected:
 	// Called when the game starts or when spawned

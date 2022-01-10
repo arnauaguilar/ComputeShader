@@ -6,14 +6,14 @@
 #include "ShaderParameterStruct.h"
 #include "RenderTargetPool.h"
 #include "RHI.h"
-
+#include "ShaderCompilerCore.h"
 
 
 #include "Modules/ModuleManager.h"
 
 
 
-#define NUM_THREADS_PER_GROUP_DIMENSION 10
+#define NUM_THREADS_PER_GROUP_DIMENSION 8
 
 class FForceFieldCS : public FGlobalShader
 {
@@ -24,7 +24,8 @@ class FForceFieldCS : public FGlobalShader
 		SHADER_PARAMETER_UAV(RWTexture3D<float4>, OutputTexture)
 		//SHADER_PARAMETER_UAV(RWTexture3D<FVector>, OutputTexture3D)
 		SHADER_PARAMETER(FVector2D, Dimensions)
-		SHADER_PARAMETER(UINT, TimeStamp)
+		SHADER_PARAMETER(FVector, TargetPos)
+		SHADER_PARAMETER(UINT, UnitsPerPixel)
 	END_SHADER_PARAMETER_STRUCT()
 
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
@@ -40,6 +41,7 @@ class FForceFieldCS : public FGlobalShader
 		OutEnvironment.SetDefine(TEXT("THREADGROUPSIZE_X"), NUM_THREADS_PER_GROUP_DIMENSION);
 		OutEnvironment.SetDefine(TEXT("THREADGROUPSIZE_Y"), NUM_THREADS_PER_GROUP_DIMENSION);
 		OutEnvironment.SetDefine(TEXT("THREADGROUPSIZE_Z"), NUM_THREADS_PER_GROUP_DIMENSION);
+		OutEnvironment.CompilerFlags.Add(ECompilerFlags::CFLAG_AllowTypedUAVLoads);
 	}
 };
 IMPLEMENT_GLOBAL_SHADER(FForceFieldCS, "/CustomShaders/ForceFieldCS.usf"/*"/Engine/Private/ComputeGenerateMips.usf"*/, "MainCS", SF_Compute);
@@ -131,7 +133,8 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 	FForceFieldCS::FParameters PassParameters;
 	PassParameters.OutputTexture = ComputeShaderOutput->GetRenderTargetItem().UAV;
 	PassParameters.Dimensions = FVector2D(cachedParams.GetRenderTargetSize().X, cachedParams.GetRenderTargetSize().Y);
-	PassParameters.TimeStamp = cachedParams.TimeStamp;
+	PassParameters.TargetPos = cachedParams.TargetPos;
+	PassParameters.UnitsPerPixel = cachedParams.UnitsPerPixel;
 
 	//Get a reference to our shader type from global shader map
 	TShaderMapRef<FForceFieldCS> forceFieldCS(GetGlobalShaderMap(GMaxRHIFeatureLevel));
