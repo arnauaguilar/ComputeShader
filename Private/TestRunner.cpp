@@ -38,9 +38,12 @@ void ATestRunner::Tick(float DeltaTime)
 		FForceFieldCSParameters parameters(RenderTarget);
 		TimeStamp++;
 		parameters.TargetPos = object->GetActorLocation();
+		parameters.TargetVel = object->GetVelocity();
 		parameters.UnitsPerPixel = 100;
+		
 		field.UpdateParameters(parameters);
 	}
+	UE_LOG(LogTemp, Verbose, TEXT("TestRunner: %f, %f, %f"), object->GetVelocity().X,object->GetVelocity().Y,object->GetVelocity().Z);
 
 
 }

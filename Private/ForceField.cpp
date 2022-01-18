@@ -25,6 +25,7 @@ class FForceFieldCS : public FGlobalShader
 		//SHADER_PARAMETER_UAV(RWTexture3D<FVector>, OutputTexture3D)
 		SHADER_PARAMETER(FVector2D, Dimensions)
 		SHADER_PARAMETER(FVector, TargetPos)
+		SHADER_PARAMETER(FVector, TargetVel)
 		SHADER_PARAMETER(UINT, UnitsPerPixel)
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -115,7 +116,7 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 	//If the render target is not valid, get an element from the render target pool by supplying a Descriptor
 	if (!ComputeShaderOutput.IsValid())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Compute Shader Output Not Valid; re-generating"));
+		//UE_LOG(LogTemp, Warning, TEXT("Compute Shader Output Not Valid; re-generating"));
 		FIntVector Size = cachedParams.GetRenderTargetSize();
 		FPooledRenderTargetDesc ComputeShaderOutputDesc(FPooledRenderTargetDesc::CreateVolumeDesc(Size.X,Size.Y,Size.Z,cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI->GetFormat(), FClearValueBinding::None, TexCreate_None, TexCreate_ShaderResource | TexCreate_UAV, false));
 		//FPooledRenderTargetDesc ComputeShaderOutputDesc(FPooledRenderTargetDesc::Create2DDesc(cachedParams.GetRenderTargetSize(), cachedParams.RenderTarget->GetRenderTargetResource()->TextureRHI->GetFormat(), FClearValueBinding::None, TexCreate_None, TexCreate_ShaderResource | TexCreate_UAV, false));
@@ -134,8 +135,9 @@ void ForceField::Execute_RenderThread(FRDGBuilder&  builder, const FSceneTexture
 	PassParameters.OutputTexture = ComputeShaderOutput->GetRenderTargetItem().UAV;
 	PassParameters.Dimensions = FVector2D(cachedParams.GetRenderTargetSize().X, cachedParams.GetRenderTargetSize().Y);
 	PassParameters.TargetPos = cachedParams.TargetPos;
+	PassParameters.TargetVel = cachedParams.TargetVel;
 	PassParameters.UnitsPerPixel = cachedParams.UnitsPerPixel;
-
+	UE_LOG(LogTemp, Verbose, TEXT("PreCompute: %f, %f, %f"), PassParameters.TargetVel.X,PassParameters.TargetVel.Y,PassParameters.TargetVel.Z);
 	//Get a reference to our shader type from global shader map
 	TShaderMapRef<FForceFieldCS> forceFieldCS(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 

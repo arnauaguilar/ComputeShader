@@ -29,6 +29,7 @@ private:
 	FIntVector CachedRenderTargetSize;
 public:
 	FVector TargetPos;
+	FVector TargetVel;
 	uint32 UnitsPerPixel;
 };
 /**
